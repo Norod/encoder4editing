@@ -1,6 +1,8 @@
 from torch.utils.data import Dataset
 from PIL import Image
 from utils import data_utils
+import torchvision
+import numpy as np
 
 
 class ImagesDataset(Dataset):
@@ -18,7 +20,7 @@ class ImagesDataset(Dataset):
 	def __getitem__(self, index):
 		from_path = self.source_paths[index]
 		from_im = Image.open(from_path)
-		from_im = from_im.convert('RGB')
+		from_im = from_im.convert('RGB') if self.opts.label_nc == 0 else from_im.convert('L')
 
 		to_path = self.target_paths[index]
 		to_im = Image.open(to_path).convert('RGB')
@@ -29,5 +31,9 @@ class ImagesDataset(Dataset):
 			from_im = self.source_transform(from_im)
 		else:
 			from_im = to_im
+			
+		if np.random.rand() < 0.5:
+			from_im = torchvision.transforms.functional.hflip(from_im)
+			to_im = torchvision.transforms.functional.hflip(to_im)
 
 		return from_im, to_im
